@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="text_primary">#FF000000</color>
+
+    <!-- button text (alias, currently same as text_primary) -->
+    <color name="button_text">#FF000000</color>
+
+    <!-- AC and backspace must be red in both modes -->
+    <color name="ac_back_color">#FF000000</color>  <!-- vivid red -->
+
+    <!-- optional: other colors you may want -->
+    <color name="background_color">#FFFFFFFF</color>
+</resources>
