@@ -330,12 +330,12 @@
                     android:id="@+id/backspace"
                     android:layout_width="match_parent"
                     android:layout_height="100dp"
-                    android:background="@drawable/operation_spaced_ns"
+                    android:background="@drawable/ac_spaced_ns"
                     android:backgroundTint="@null"
                     android:fontFamily="@font/nothing"
                     android:gravity="center"
                     android:text="&lt;"
-                    android:textColor="@color/text_primary"
+                    android:textColor="@color/ac_back_color"
                     android:textSize="30dp"
                     app:backgroundTint="@null" />
 

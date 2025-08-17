@@ -45,37 +45,67 @@ public class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<Button>(R.id.dot).setOnClickListener{
+        findViewById<Button?>(R.id.dot)?.setOnClickListener{
             flash(it)
             appendDot()
         }
 
-        findViewById<Button>(R.id.plus).setOnClickListener{
+        findViewById<Button?>(R.id.plus)?.setOnClickListener{
             flash(it); appendOperator("+")
         }
-        findViewById<Button>(R.id.minus).setOnClickListener{
+        findViewById<Button?>(R.id.minus)?.setOnClickListener{
             flash(it); appendOperator("-")
         }
-        findViewById<Button>(R.id.product).setOnClickListener{
+        findViewById<Button?>(R.id.product)?.setOnClickListener{
             flash(it); appendOperator("x")
         }
-        findViewById<Button>(R.id.divide).setOnClickListener{
+        findViewById<Button?>(R.id.divide)?.setOnClickListener{
             flash(it); appendOperator("/")
         }
 
-        findViewById<Button>(R.id.equal).setOnClickListener{
+        findViewById<Button?>(R.id.equal)?.setOnClickListener{
             flash(it)
             calculateResult()
         }
 
-        findViewById<Button>(R.id.allclear).setOnClickListener{
+        findViewById<Button?>(R.id.allclear)?.setOnClickListener{
             flash(it)
             clearAll()
         }
 
-        findViewById<Button>(R.id.backspace).setOnClickListener{
+        findViewById<Button?>(R.id.backspace)?.setOnClickListener{
             flash(it)
             backspace()
+        }
+
+        findViewById<Button?>(R.id.sin)?.setOnClickListener {
+            flash(it)
+            applyUnaryToLastNumber("sin") { Math.sin(it) }
+        }
+
+        findViewById<Button?>(R.id.cos)?.setOnClickListener {
+            flash(it)
+            applyUnaryToLastNumber("cos") { Math.cos(it) }
+        }
+
+        findViewById<Button?>(R.id.tan)?.setOnClickListener {
+            flash(it)
+            applyUnaryToLastNumber("tan") { Math.tan(it) }
+        }
+
+        findViewById<Button?>(R.id.log)?.setOnClickListener {
+            flash(it)
+            applyUnaryToLastNumber("log") { Math.log10(it) } // base-10 log
+        }
+
+        findViewById<Button?>(R.id.modulo)?.setOnClickListener {
+            flash(it)
+            appendOperator("%")
+        }
+
+        findViewById<Button?>(R.id.pi)?.setOnClickListener {
+            flash(it)
+            insertPi()
         }
 
         updateMainDisplay()
@@ -116,7 +146,7 @@ public class MainActivity : AppCompatActivity() {
     }
 
     private fun appendDot(){
-        val lastnum=currentExpression.split(Regex("[+\\-x%]")).lastOrNull()?:""
+        val lastnum = currentExpression.split(Regex("[+\\-x/%]")).lastOrNull() ?: ""
         if(!lastnum.contains(".")){
             if(lastnum.isEmpty()){
                 currentExpression+="0."
@@ -134,6 +164,57 @@ public class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyUnaryToLastNumber(name: String, useDegrees: Boolean = false, fn: (Double) -> Double) {
+        if (currentExpression.isEmpty()) return
+
+        // find index of last operator: + - x / %
+        val lastOpIndex = currentExpression.indexOfLast { ch -> "+-x/%".contains(ch) }
+        val numStart = if (lastOpIndex == -1) 0 else lastOpIndex + 1
+
+        // get the last number substring
+        val lastNumberStr = currentExpression.substring(numStart)
+        if (lastNumberStr.isEmpty()) return
+
+        val value = lastNumberStr.toDoubleOrNull() ?: return
+
+        // convert degrees->radians if requested (by default we work in radians)
+        val input = if (useDegrees) Math.toRadians(value) else value
+
+        // compute, but guard against NaN/Inf (e.g. tan(90deg) in degrees -> huge; user can handle)
+        val rawResult = try {
+            fn(input)
+        } catch (e: Exception) {
+            Double.NaN
+        }
+
+        if (rawResult.isNaN() || rawResult.isInfinite()) {
+            mainDisplay.text = "Error"
+            return
+        }
+
+        // format result to a nice string using your existing formatter
+        val resultStr = formatResult(rawResult)
+
+        // replace the last number with the computed result
+        currentExpression = currentExpression.substring(0, numStart) + resultStr
+        updateMainDisplay()
+
+        // show previous calculation like sin(45)
+        previousDisplay.text = "$name($lastNumberStr)"
+    }
+
+    private fun insertPi() {
+        val piStr = formatResult(Math.PI)
+        if (currentExpression.isNotEmpty() && currentExpression.last().toString().matches(Regex("[0-9\\.]"))) {
+            // implicit multiply
+            currentExpression += "x$piStr"
+        } else {
+            currentExpression += piStr
+        }
+        updateMainDisplay()
+    }
+
+
     private fun clearAll() {
         currentExpression = ""
         mainDisplay.text = ""
@@ -142,7 +223,7 @@ public class MainActivity : AppCompatActivity() {
 
     private fun calculateResult() {
         if (currentExpression.isEmpty()) return
-        if (currentExpression.last().toString().matches(Regex("[+\\-x%]"))) {
+        if (currentExpression.last().toString().matches(Regex("[+\\-x/%]"))) {
 
             currentExpression = currentExpression.dropLast(1)
         }
